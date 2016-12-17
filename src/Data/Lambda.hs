@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module Lambda where
+module Data.Lambda where
 
 import GHC.Generics
 import Data.Data
@@ -17,6 +17,19 @@ data Lambda
   | App Lambda
         Lambda
   deriving (Eq, Ord, Show, Read, Data, Typeable)
+
+bind :: String -> Lambda -> Lambda
+bind [] = id
+bind (x:xs) = Bind x . (bind xs)
+
+nApply :: Int -> Lambda -> Lambda -> Lambda
+nApply n f x = foldl (flip App) x (replicate n f)
+
+applys :: [Lambda] -> Lambda
+applys = foldl1 App
+
+lvars :: [VarName] -> [Lambda]
+lvars = fmap LVar
 
 -- | `sub E ('x',N)` substitutes all free variables with name 'x' with expression
 -- N.
@@ -59,8 +72,10 @@ displayLambda (LVar x) = [x]
 displayLambda (Bind x e) = "L" ++ [x] ++ "." ++ (displayLambda e)
 displayLambda (App e1 e2) = (showL e1) ++ (showL e2)
   where
-    showL e@(Bind _ _) = "(" ++ (displayLambda e) ++ ")"
+    showL e@(Bind _ _) = paren e
+    showL e@(App _ _) = paren e
     showL e = displayLambda e
+    paren e = "(" ++ (displayLambda e) ++ ")"
 
 -- | performs a single beta reduction step on the given lambda term
 betaReduct :: Lambda -> Lambda

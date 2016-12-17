@@ -1,20 +1,16 @@
 module Main where
 
-import Lambda
 import Parser
+import Parser.Interpreter
+import Data.Interpreter
 import Control.Monad.Catch
 import Control.Monad
+import Control.Monad.State
 
 main :: IO ()
-main = forever $ do
-  putStrLn "Input Lambda Expression"
-  t <- getLine
-  l <- lambdaParser t
-  putStr "> " >> (putStrLn . show $ l)
-  putStr "> " >> (showL l)
-  let nl = betaReduce $ l 
-  putStr "> " >> (putStrLn . show $ nl)
-  putStr "> " >> (showL nl)
-  `catch` (\(LambdaParserException s) -> putStrLn s)
+main = evalStateT (forever exeCmd) initLambdaStateData
   where
-    showL = putStrLn . displayLambda
+    exeCmd :: LambdaStateIO ()
+    exeCmd =
+      (liftIO getLine >>= runParser parseCmds >>= runCommand) `catch`
+      (\(LambdaParserException s) -> liftIO $ putStrLn s)

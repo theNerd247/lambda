@@ -15,12 +15,17 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Lambda
+  exposed-modules:     Data.Lambda
+                     , Data.Interpreter
                      , Parser
+                     , Parser.Lambda
+                     , Parser.Interpreter
+                     , Encodes.ChurchNumeral
   build-depends:       base >= 4.7 && < 5
                      , attoparsec
                      , mtl
                      , containers
+                     , text
                      , optparse-applicative
                      , bytestring
                      , exceptions
@@ -33,6 +38,7 @@ executable lambda-exe
   build-depends:       base
                      , lambda
                      , exceptions
+                     , mtl
   default-language:    Haskell2010
 
 test-suite lambda-test
