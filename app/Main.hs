@@ -17,9 +17,10 @@ initEnv = sequence_ . fmap runCommand $
   ]
 
 main :: IO ()
-main = evalStateT (initEnv >> forever exeCmd) initLambdaStateData
+main = handle quitExecpt $ evalStateT (initEnv >> forever exeCmd) initLambdaStateData
   where
     exeCmd :: LambdaStateIO ()
     exeCmd =
       (liftIO getLine >>= runParser parseCmds >>= runCommand) `catch`
       (\(LambdaParserException s) -> liftIO $ putStrLn s)
+    quitExecpt QuitException = putStrLn "Stopping Lambda Interpreter"

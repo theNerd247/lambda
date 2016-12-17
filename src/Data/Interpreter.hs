@@ -7,21 +7,30 @@ import Data.Lambda
 import Data.Data
 import Control.Monad.State
 import Control.Monad.IO.Class
+import Control.Monad.Catch
+import Encodes.ChurchNumeral
 
 data Cmd
   = AssignVar VarName
               Lambda
   | EvalLambda Lambda
+  | ShowEnv
+  | EncodeNum VarName Int
+  | Quit
   deriving (Eq, Ord, Show, Read, Data, Typeable)
+
+data QuitException = QuitException deriving (Show,Data,Typeable)
 
 type LambdaStateData = (Lambda -> Lambda)
 
 type LambdaStateIO = StateT LambdaStateData IO
 
+instance Exception QuitException
+
 initLambdaStateData = id
 
 runCommand
-  :: (MonadState LambdaStateData m, MonadIO m)
+  :: (MonadState LambdaStateData m, MonadIO m, MonadThrow m)
   => Cmd -> m ()
 runCommand (AssignVar name newL) = do
   modify' $ (\l s -> App (Bind name (l s)) newL)
@@ -29,6 +38,9 @@ runCommand (AssignVar name newL) = do
 runCommand (EvalLambda prog) = do
   l <- get
   displayOutput . displayLambda . betaReduce . l $ prog
+runCommand (EncodeNum name n) = runCommand $ AssignVar name (encodeNum n)
+runCommand Quit = throwM QuitException
+runCommand ShowEnv = showEnv
 
 displayOutput
   :: (MonadIO m)
