@@ -15,4 +15,4 @@ multL :: Lambda
 multL = bind "nmf" $ App (LVar 'n') (applys . lvars $ "mf")
 
 powL :: Lambda
-powL = bind "nm" . applys . lvars $ "nm"
+powL = bind "mn" . applys . lvars $ "nm"
