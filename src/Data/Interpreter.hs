@@ -25,7 +25,7 @@ runCommand
   => Cmd -> m ()
 runCommand (AssignVar name newL) = do
   modify' $ (\l s -> App (Bind name (l s)) newL)
-  showEnv
+  displayOutput $ displayIVar name newL
 runCommand (EvalLambda prog) = do
   l <- get
   displayOutput . displayLambda . betaReduce . l $ prog
