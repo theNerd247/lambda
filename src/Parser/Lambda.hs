@@ -15,6 +15,6 @@ parens x = char '(' *> x <* char ')'
 
 parseLVar = LVar <$> parseVar
 
-parseBind = pure Bind <* char 'L' <*> parseVar <* char '.' <*> parseLambda
+parseBind = pure Bind <* char '\\' <*> parseVar <* char '.' <*> parseLambda
 
-parseVar = satisfy isLower
+parseVar = letter

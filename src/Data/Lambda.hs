@@ -69,7 +69,7 @@ allVars e = freeVars e `union` boundVars e
 
 displayLambda :: Lambda -> String
 displayLambda (LVar x) = [x]
-displayLambda (Bind x e) = "L" ++ [x] ++ "." ++ (displayLambda e)
+displayLambda (Bind x e) = "\\" ++ [x] ++ "." ++ (displayLambda e)
 displayLambda (App e1 e2) = (showL e1) ++ (showL e2)
   where
     showL e@(Bind _ _) = paren e
