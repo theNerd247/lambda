@@ -7,7 +7,9 @@ import Data.Char (isLower)
 
 chainl1 p f = foldl (flip ($)) <$> p <*> many (flip <$> f <*> p)
 
-parseLambda = chainl1 parseL' $ pure App
+parseLambda = chainl1 parseL' parseApp
+  where
+    parseApp = char ' ' *> pure App 
 
 parseL' =  parens parseLambda <|> parseBind <|> parseLVar
  
@@ -17,4 +19,4 @@ parseLVar = LVar <$> parseVar
 
 parseBind = pure Bind <* char '\\' <*> parseVar <* char '.' <*> parseLambda
 
-parseVar = letter
+parseVar = many1 letter

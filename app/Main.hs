@@ -10,10 +10,10 @@ import Control.Monad.State
 
 initEnv :: LambdaStateIO ()
 initEnv = sequence_ . fmap runCommand $ 
-  [ AssignVar 's' succL
-  , AssignVar 'a' addL
-  , AssignVar 'm' multL
-  , AssignVar 'p' powL
+  [ AssignVar "s" succL
+  , AssignVar "a" addL
+  , AssignVar "m" multL
+  , AssignVar "p" powL
   ]
 
 main :: IO ()

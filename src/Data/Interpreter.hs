@@ -51,12 +51,12 @@ displayOutput s =
      putStrLn s
 
 displayIVar :: VarName -> Lambda -> String
-displayIVar n l = [n] ++ " := " ++ (displayLambda l)
+displayIVar n l = n ++ " := " ++ (displayLambda l)
 
 showEnv
   :: (MonadState LambdaStateData m, MonadIO m)
   => m ()
-showEnv = get >>= (showIVar . ($LVar 'M'))
+showEnv = get >>= (showIVar . ($LVar "M"))
   where
     showIVar (LVar _) = return ()
     showIVar (App (Bind name l) nl) = do
