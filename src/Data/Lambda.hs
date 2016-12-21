@@ -28,7 +28,7 @@ instance (ToVarName a) => ToVarName [a] where
   toVarName = mconcat . fmap toVarName
 
 bind :: (ToVarName a) => [a] -> Lambda -> Lambda
-bind = foldl (\b -> flip fmap b . Bind . toVarName) id
+bind = foldl ((.Bind . toVarName) . fmap) id
 
 nApply :: Int -> Lambda -> Lambda -> Lambda
 nApply n f x = foldl (flip App) x (replicate n f)
@@ -82,11 +82,12 @@ allVars e = freeVars e `union` boundVars e
 displayLambda :: Lambda -> String
 displayLambda (LVar x) = x
 displayLambda (Bind x e) = "\\" ++ x ++ "." ++ (displayLambda e)
-displayLambda (App e1 e2) = (showL e1) ++ (showL e2)
+displayLambda (App e1 e2) = (showL e1) ++ " " ++ (showR e2)
   where
     showL e@(Bind _ _) = paren e
-    showL e@(App _ _) = paren e
     showL e = displayLambda e
+    showR e@(App _ _) = paren e
+    showR e = showL e
     paren e = "(" ++ (displayLambda e) ++ ")"
 
 -- | performs a single beta reduction step on the given lambda term

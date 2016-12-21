@@ -19,4 +19,4 @@ parseLVar = LVar <$> parseVar
 
 parseBind = pure Bind <* char '\\' <*> parseVar <* char '.' <*> parseLambda
 
-parseVar = many1 letter
+parseVar = many1 $ letter <|> digit
