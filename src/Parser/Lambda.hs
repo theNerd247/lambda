@@ -1,6 +1,6 @@
 module Parser.Lambda where
 
-import Data.Attoparsec.Text
+import Data.Attoparsec.Text.Lazy
 import Data.Lambda
 import Control.Applicative
 import Data.Char (isLower)

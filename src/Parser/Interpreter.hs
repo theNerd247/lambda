@@ -2,13 +2,15 @@
 
 module Parser.Interpreter where
 
-import Data.Attoparsec.Text
+import Data.Attoparsec.Text.Lazy
 import Data.Interpreter
 import Parser.Lambda
 import Control.Applicative
-import Data.Char (isLower,digitToInt)
+import Data.Char (isLower,digitToInt,isSpace)
 
 token x = skipSpace *> x <* skipSpace
+
+parseScript = many $ token parseCmds
 
 parseCmds = parseAssignCmd <|> parseShowEnv <|> parseEncode <|> parseQuit <|> parseEvalCmd
 
@@ -20,7 +22,7 @@ parseEvalCmd = EvalLambda <$> parseLambda
 
 parseShowEnv = pure ShowEnv <* (token $ string "show")
 
-parseEncode = pure EncodeNum <* token (string "enc") <*> parseVar <*> token parseNum
+parseEncode = pure EncodeNum <* token (string "enc") <*>  parseNum
 
 parseNum = toNum <$> many1 digit
   where

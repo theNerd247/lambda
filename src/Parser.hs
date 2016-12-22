@@ -3,9 +3,9 @@ module Parser where
 
 import Data.Data
 import Control.Applicative
-import Data.Attoparsec.Text
+import Data.Attoparsec.Text.Lazy
 import Control.Monad.Catch
-import qualified Data.Text as T
+import qualified Data.Text.Lazy as T
 
 data LambdaParserException =
   LambdaParserException String
@@ -15,7 +15,8 @@ instance Exception LambdaParserException
 
 runParser
   :: (MonadThrow m)
-  => Parser a -> String ->  m a
+  => Parser a -> T.Text ->  m a
 runParser p =
-  either (throwM . LambdaParserException) return .
-  parseOnly (p <* endOfInput) . T.pack
+  either (throwM . LambdaParserException) return . eitherResult . (parse p) 
+
+runParserString p = runParser p . T.pack

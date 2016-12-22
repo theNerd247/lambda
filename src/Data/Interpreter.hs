@@ -15,7 +15,7 @@ data Cmd
               Lambda
   | EvalLambda Lambda
   | ShowEnv
-  | EncodeNum VarName Int
+  | EncodeNum Int
   | Quit
   deriving (Eq, Ord, Show, Read, Data, Typeable)
 
@@ -29,16 +29,20 @@ instance Exception QuitException
 
 initLambdaStateData = id
 
+runScript  :: (Traversable t, MonadState LambdaStateData m, MonadIO m, MonadThrow m)
+  => t Cmd -> m ()
+runScript = sequence_ . fmap runCommand 
+
 runCommand
   :: (MonadState LambdaStateData m, MonadIO m, MonadThrow m)
   => Cmd -> m ()
 runCommand (AssignVar name newL) = do
-  modify' $ (\l s -> App (Bind name (l s)) newL)
+  modify' $ (. \s -> App (Bind name s) newL)
   displayOutput $ displayIVar name newL
 runCommand (EvalLambda prog) = do
   l <- get
   displayOutput . displayLambda . betaReduce . l $ prog
-runCommand (EncodeNum name n) = runCommand $ AssignVar name (encodeNum n)
+runCommand (EncodeNum n) = runCommand $ AssignVar (show n) (encodeNum n)
 runCommand Quit = throwM QuitException
 runCommand ShowEnv = showEnv
 
@@ -56,7 +60,7 @@ displayIVar n l = n ++ " := " ++ (displayLambda l)
 showEnv
   :: (MonadState LambdaStateData m, MonadIO m)
   => m ()
-showEnv = get >>= (showIVar . ($LVar "M"))
+showEnv = get >>= showIVar . ($LVar "PROG")
   where
     showIVar (LVar _) = return ()
     showIVar (App (Bind name l) nl) = do
