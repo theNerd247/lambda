@@ -46,41 +46,12 @@ sub :: VarName -> LambdaF a -> LambdaF a -> LambdaF a
 sub v n x@(LVar e)
   | e == v = n
   | otherwise = x
-sub v n (App e1 e2) = App (sub e1 x) (sub e2 x)
 sub v n x@(Bind ve e)
   | ve == v = x
   | otherwise =
-    let (newVe,newE) = renameBoundVars x n
-    in Bind newVe (sub newE y)
-
-
-
--- | `renameBoundVars (Bind x E) N` renames all occurences of x in E such that the
--- newly chosen name variablename isn't in either variable sets of E or N. This
--- replacement only occures if x `elem` freeVars(N) is true.
-renameBoundVars :: Lambda -> Lambda -> (VarName, Lambda)
-renameBoundVars (Bind x e) n 
-  | x `notElem` (freeVars n) = (x,e)
-  | otherwise = (newX, sub e (x,LVar newX))
-  where
-    variableSpace = allVars e `union` allVars n
-    newX = getNewVarName x 1
-    getNewVarName x n
-      | (x++(show n) `elem` variableSpace) = getNewVarName x (n+1)
-      | otherwise = x++(show n)
-renameBoundVars _ _ = undefined
-
-freeVars :: Lambda -> [VarName]
-freeVars (LVar x) = [x]
-freeVars (Bind x e) = freeVars e \\ [x]
-freeVars (App e1 e2) = (freeVars e1) `union` (freeVars e2)
-
-boundVars :: Lambda -> [VarName]
-boundVars (LVar x) = []
-boundVars (Bind x e) = x : (boundVars e)
-boundVars (App e1 e2) = boundVars e1 `union` boundVars e2
-
-allVars e = freeVars e `union` boundVars e
+    let (newVe, newE) = renameBoundVars x n
+    in Bind newVe newE
+sub _ _ x = x
 
 displayLambda :: Lambda -> String
 displayLambda (LVar x) = x
