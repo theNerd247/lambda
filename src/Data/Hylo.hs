@@ -6,11 +6,11 @@ type Alg f a = f a -> a
 
 type CoAlg f a = a -> f a
 
-ana :: (Functor f) => Alg f a -> Fix f -> a
-ana alg = alg . fmap (ana alg) . unFix
+cata :: (Functor f) => Alg f a -> Fix f -> a
+cata alg = alg . fmap (cata alg) . unFix
 
-cata :: (Functor f) => CoAlg f a -> a -> Fix f
-cata coalg = Fix . fmap (cata coalg) . coalg
+ana :: (Functor f) => CoAlg f a -> a -> Fix f
+ana coalg = Fix . fmap (ana coalg) . coalg
 
 hylo :: (Functor f) => Alg f b -> CoAlg f a -> a -> b
 hylo alg coalg = alg . fmap (hylo alg coalg) . coalg
