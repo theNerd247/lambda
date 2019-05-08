@@ -7,16 +7,17 @@ import GHC.Generics
 import Data.Data
 import Data.List
 import Control.Monad.Fix (fix)
+import Data.Hylo
 
 type VarName = String
 
-data Lambda
+data LambdaF a
   = LVar VarName
-  | Bind VarName
-         Lambda
-  | App Lambda
-        Lambda
+  | Bind VarName a
+  | App a a
   deriving (Eq, Ord, Show, Read, Data, Typeable)
+
+type Lambda f = Fix LambdaF
 
 class ToVarName a where
   toVarName :: a -> VarName
@@ -41,16 +42,18 @@ lvars = fmap (LVar . toVarName)
 
 -- | `sub E ('x',N)` substitutes all free variables with name 'x' with expression
 -- N.
-sub :: Lambda -> (VarName, Lambda) -> Lambda
-sub x@(LVar e) (v, n)
+sub :: VarName -> LambdaF a -> LambdaF a -> LambdaF a
+sub v n x@(LVar e)
   | e == v = n
   | otherwise = x
-sub x@(Bind ve e) y@(v, n)
+sub v n (App e1 e2) = App (sub e1 x) (sub e2 x)
+sub v n x@(Bind ve e)
   | ve == v = x
   | otherwise =
     let (newVe,newE) = renameBoundVars x n
     in Bind newVe (sub newE y)
-sub (App e1 e2) x = App (sub e1 x) (sub e2 x)
+
+
 
 -- | `renameBoundVars (Bind x E) N` renames all occurences of x in E such that the
 -- newly chosen name variablename isn't in either variable sets of E or N. This
