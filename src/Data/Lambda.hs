@@ -62,11 +62,6 @@ reAlpha (AppAlpha e1 e2) = Fix $ App e1 e2
 
 alpha v n = hylo reAlpha (mkAlpha v n)
 
-lambdaId = bind "x" $ lvar "x"
-
-x = app (lvar "t") $ bind "y" $ lvar "z"
-y = alpha "t" (bind "x" $ lvar "a") x
-
 data Beta a =
   Beta Lambda
   | BindBeta VarName a
@@ -88,11 +83,25 @@ reBeta (AppBeta e1 e2) = Fix $ App e1 e2
 
 beta = hylo reBeta mkBeta
 
--- isNormal :: Lambda -> Bool
--- isNormal (App (Bind _ _) _) = False
--- isNormal (LVar _) = True
--- isNormal (Bind _ e) = isNormal e
--- isNormal (App e1 e2) = isNormal e1 && isNormal e2
--- 
--- betaReduce :: Lambda -> Lambda
--- betaReduce = fix (\f e -> if (isNormal e) then e else f (betaReduct e))
+data Reduce a
+  NoReduce Lambda
+  | ReduceBind VarName a
+  | ReduceApp a a
+  deriving (Functor)
+
+betaReduce :: CoAlg Reduce Lambda
+betaReduce x@(Fix (LVar _)) = NoReduce x
+betaReduce x@(App (Fix (Bind v e1)) e2) = Reduce x
+betaReduce (Bind v e) = ReduceBind v e
+betaReduce (App e1 e2) = ReduceApp e1 e2
+
+
+x = lvar "x"
+y = lvar "y"
+true = bind "x" $ bind "y" x
+false = bind "x" $ bind "y" y
+z = beta $ app true false 
+r = app true true
+t = app false false
+b = app r t
+a = beta b
