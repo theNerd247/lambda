@@ -36,44 +36,58 @@ bind s = Fix . Bind s
 app :: Lambda -> Lambda -> Lambda
 app e = Fix . (App e)
 
-data Sub a = 
-    NoSub Lambda
-  | VarSub Lambda
-  | BindSub VarName a
-  | AppSub a a
+data Alpha a = 
+    NoAlpha Lambda
+  | VarAlpha Lambda
+  | BindAlpha VarName a
+  | AppAlpha a a
   deriving Functor
 
-mkSub :: VarName -> Lambda -> CoAlg Sub Lambda
-mkSub v n = mS . unFix
+mkAlpha :: VarName -> Lambda -> CoAlg Alpha Lambda
+mkAlpha v n = mS . unFix
   where
     mS x@(LVar s)
-      | v == s = VarSub n
-      | otherwise = NoSub (Fix x)
+      | v == s = VarAlpha n
+      | otherwise = NoAlpha (Fix x)
     mS x@(Bind s e)
-      | v == s = NoSub (Fix x)
-      | otherwise = BindSub s e
-    mS (App e1 e2) = AppSub e1 e2
+      | v == s = NoAlpha (Fix x)
+      | otherwise = BindAlpha s e
+    mS (App e1 e2) = AppAlpha e1 e2
 
-reSub :: Alg Sub Lambda
-reSub (NoSub l) = l
-reSub (VarSub l) = l
-reSub (BindSub s l) = Fix $ Bind s l
-reSub (AppSub e1 e2) = Fix $ App e1 e2
+reAlpha :: Alg Alpha Lambda
+reAlpha (NoAlpha l) = l
+reAlpha (VarAlpha l) = l
+reAlpha (BindAlpha s l) = Fix $ Bind s l
+reAlpha (AppAlpha e1 e2) = Fix $ App e1 e2
 
-alpha v n = hylo reSub (mkSub v n)
+alpha v n = hylo reAlpha (mkAlpha v n)
 
 lambdaId = bind "x" $ lvar "x"
 
 x = app (lvar "t") $ bind "y" $ lvar "z"
 y = alpha "t" (bind "x" $ lvar "a") x
 
--- | performs a single beta reduction step on the given lambda term
--- betaReduct :: Lambda -> Lambda
--- betaReduct (App (Bind x e1) e2) = sub e1 (x,e2)
--- betaReduct x@(LVar _) = x
--- betaReduct (Bind x e) = Bind x (betaReduct e)
--- betaReduct (App e1 e2) = App (betaReduct e1) (betaReduct e2)
--- 
+data Beta a =
+  Beta Lambda
+  | BindBeta VarName a
+  | AppBeta a a
+  deriving (Functor)
+
+mkBeta :: CoAlg Beta Lambda
+mkBeta = mB . unFix
+  where
+    mB (App (Fix (Bind v e1)) e2) = Beta $ alpha v e2 e1
+    mB x@(LVar _) = Beta . Fix $ x
+    mB (Bind v e) = BindBeta v e
+    mB (App e1 e2) = AppBeta e1 e2
+
+reBeta :: Alg Beta Lambda
+reBeta (Beta a) = a
+reBeta (BindBeta v e) = Fix $ Bind v e
+reBeta (AppBeta e1 e2) = Fix $ App e1 e2
+
+beta = hylo reBeta mkBeta
+
 -- isNormal :: Lambda -> Bool
 -- isNormal (App (Bind _ _) _) = False
 -- isNormal (LVar _) = True
