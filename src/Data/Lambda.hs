@@ -22,6 +22,11 @@ type Lambda = Fix LambdaF
 instance Show (Fix LambdaF) where
   show = cata displayLambda
 
+displayLambda :: LambdaF String -> String
+displayLambda (LVar x) = x
+displayLambda (Bind x e) = "\\" ++ x ++ "." ++ e
+displayLambda (App e1 e2) = "(" ++ e1 ++ ") (" ++ e2 ++ ")"
+
 lvar :: VarName -> Lambda
 lvar = Fix . LVar 
 
@@ -55,17 +60,12 @@ reSub (VarSub l) = l
 reSub (BindSub s l) = Fix $ Bind s l
 reSub (AppSub e1 e2) = Fix $ App e1 e2
 
-sub v n = hylo reSub (mkSub v n)
-
-displayLambda :: LambdaF String -> String
-displayLambda (LVar x) = x
-displayLambda (Bind x e) = "\\" ++ x ++ "." ++ e
-displayLambda (App e1 e2) = "(" ++ e1 ++ ") (" ++ e2 ++ ")"
+alpha v n = hylo reSub (mkSub v n)
 
 lambdaId = bind "x" $ lvar "x"
 
 x = app (lvar "t") $ bind "y" $ lvar "z"
-y = sub "t" (bind "x" $ lvar "a") x
+y = alpha "t" (bind "x" $ lvar "a") x
 
 -- | performs a single beta reduction step on the given lambda term
 -- betaReduct :: Lambda -> Lambda
