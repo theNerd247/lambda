@@ -31,35 +31,31 @@ bind s = Fix . Bind s
 app :: Lambda -> Lambda -> Lambda
 app e = Fix . (App e)
 
-data Sub a =
-  NoSub Lambda
-  | SubBind VarName a
-  | SubApp a a
-  deriving (Functor)
+data Sub a = 
+    NoSub Lambda
+  | VarSub Lambda
+  | BindSub VarName a
+  | AppSub a a
+  deriving Functor
 
-toLambda :: Alg Sub Lambda
-toLambda (NoSub a) = a
-toLambda (Sub e) = e
+mkSub :: VarName -> Lambda -> CoAlg Sub Lambda
+mkSub v n = mS . unFix
+  where
+    mS x@(LVar s)
+      | v == s = VarSub n
+      | otherwise = NoSub (Fix x)
+    mS x@(Bind s e)
+      | v == s = NoSub (Fix x)
+      | otherwise = BindSub s e
+    mS (App e1 e2) = AppSub e1 e2
 
-sub :: VarName -> Lambda -> CoAlg LambdaF Lambda
-sub v n x@(LVar s))
-  | v == s = _
-  | otherwise = x
-sub v n x@(Bind s e)
-  | v == s = x
-  | otherwise = SubBind s e
-sub v n x@(App (e1 e2)) = App e1 e2
+reSub :: Alg Sub Lambda
+reSub (NoSub l) = l
+reSub (VarSub l) = l
+reSub (BindSub s l) = Fix $ Bind s l
+reSub (AppSub e1 e2) = Fix $ App e1 e2
 
--- | `sub E ('x',N)` substitutes all free variables with name 'x' with expression
--- N.
--- sub :: VarName -> Lambda -> CoAlg LambdaF Lambda
--- sub _ _ x@(App _ _) = Fix x
--- sub v n x@(LVar s)
---   | v == s = n
---   | otherwise = Fix x
--- sub v n x@(Bind s e)
---   | v == s = Fix x
---   | otherwise = n
+sub v n = hylo reSub (mkSub v n)
 
 displayLambda :: LambdaF String -> String
 displayLambda (LVar x) = x
@@ -68,8 +64,8 @@ displayLambda (App e1 e2) = "(" ++ e1 ++ ") (" ++ e2 ++ ")"
 
 lambdaId = bind "x" $ lvar "x"
 
-x = app lambdaId $ bind "y" $ lvar "z"
--- y = cata (sub "x" $ bind "x" $ lvar "a") x
+x = app (lvar "t") $ bind "y" $ lvar "z"
+y = sub "t" (bind "x" $ lvar "a") x
 
 -- | performs a single beta reduction step on the given lambda term
 -- betaReduct :: Lambda -> Lambda
