@@ -21,7 +21,7 @@ library
                      , Parser.Lambda
                      , Parser.Interpreter
                      , Encodes.ChurchNumeral
-  build-depends:       base >= 4.7 && < 5
+  build-depends:       base
                      , attoparsec
                      , mtl
                      , containers
