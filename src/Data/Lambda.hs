@@ -80,9 +80,7 @@ beta = cata betaF
     betaF (App l@(Fix (Bind v m)) n) = sub v n m
     betaF l = Fix l
 
-reduceF :: LambdaF Lambda -> Lambda
-reduceF l@(App (Fix (Bind v m)) n) = beta (Fix l)
-reduceF l = Fix l
-
 reduce :: Lambda -> Lambda
-reduce = cata reduceF
+reduce (Fix (Bind v m)) = bind v . reduce $ beta m
+reduce l@(Fix (App (Fix (Bind _ _)) _)) = reduce $ beta l
+reduce l = l
