@@ -1,18 +1,20 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Encodes.ChurchNumeral where
 
 import Data.Lambda
 
-encodeNum :: Int -> Lambda
-encodeNum n = bind "fx" $ nApply n (LVar "f") (LVar "x")
+cn :: Int -> Lambda
+cn n = bind "f" $ bind "x" $ nApply n "f" "x"
 
 succL :: Lambda
-succL = bind "nfx" $ App (LVar "f") (applys . lvars $ "nfx")
+succL = bind "n" $ bind "f" $ bind "x" $ "f" <@> ("n" <@> "f" <@> "x")
 
-addL :: Lambda
-addL = bind "nm" $ applys [LVar "n",succL,LVar "m"]
-
-multL :: Lambda
-multL = bind "nmf" $ App (LVar "n") (applys . lvars $ "mf")
-
-powL :: Lambda
-powL = bind "mn" . applys . lvars $ "nm"
+-- addL :: Lambda
+-- addL = binds "nm" $ "n" <@> succL <@> "m"
+-- 
+-- multL :: Lambda
+-- multL = binds "nmf" $ "n" <@> "m" <@> "f"
+-- 
+-- powL :: Lambda
+-- powL = binds "mn" $ "n" <@> "m"
