@@ -74,13 +74,15 @@ sub v e = cata $ subF v e
       | otherwise = lvar x
     subF _ _ l = Fix l
 
+-- | beta reduce all reduxes in lambda term
 beta :: Lambda -> Lambda
 beta = cata betaF
   where
     betaF (App l@(Fix (Bind v m)) n) = sub v n m
     betaF l = Fix l
 
+-- | Continues to reduce a lambda term down to where there are no reduxes left
 reduce :: Lambda -> Lambda
-reduce (Fix (Bind v m)) = bind v . reduce $ beta m
-reduce l@(Fix (App (Fix (Bind _ _)) _)) = reduce $ beta l
-reduce l = l
+reduce l@(Fix (App m n)) = reduce $ beta l
+reduce (Fix (Bind v m)) = bind v $ reduce (beta m)
+reduce l@(Fix _) = l
