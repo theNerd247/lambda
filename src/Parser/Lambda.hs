@@ -5,18 +5,30 @@ import Data.Lambda
 import Control.Applicative
 import Data.Char (isLower)
 
-chainl1 p f = foldl (flip ($)) <$> p <*> many (flip <$> f <*> p)
+assign :: Parser Lambda
+assign = do
+  name <- varExpr
+  manySpace
+  ":="
+  manySpace
+  m <- lambdaExpr
+  e <- lambdaExpr
+  app (bind name e) m
 
-parseLambda = chainl1 parseL' parseApp
-  where
-    parseApp = char ' ' *> pure App 
+lambdaExpr :: Parser Lambda
+lambdaExpr = lvarExpr <|> bindExpr <|> appExpr
 
-parseL' =  parens parseLambda <|> parseBind <|> parseLVar
- 
+lvarExpr :: Parser Lambda
+lvarExpr = lvar <$> varExpr
+
+bindExpr :: Parser Lambda
+bindExpr = pure bind <* char '\\' <*> varExpr <* char '.' <*> lambdaExpr
+
+appExpr :: Parser Lambda
+appExpr = app <$> (parens lambdaExpr) <*> (parens lambdaExpr)
+
+varExpr :: Parser String
+varExpr = many1 $ letter <|> digit
+
+parens :: Parser a -> Parser a
 parens x = char '(' *> x <* char ')'
-
-parseLVar = LVar <$> parseVar
-
-parseBind = pure Bind <* char '\\' <*> parseVar <* char '.' <*> parseLambda
-
-parseVar = many1 $ letter <|> digit

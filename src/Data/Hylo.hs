@@ -14,12 +14,3 @@ ana coalg = Fix . fmap (ana coalg) . coalg
 
 hylo :: (Functor f) => Alg f b -> CoAlg f a -> a -> b
 hylo alg coalg = alg . fmap (hylo alg coalg) . coalg
-
-data L a = 
-  L Int a
-  | N Int
-  deriving (Show)
-
-instance Functor L where
-  fmap f (L i a) = L i (f a)
-  fmap f (N i) = N i

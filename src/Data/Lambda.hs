@@ -14,7 +14,6 @@ import Data.String
 
 type VarName = String
 
--- | TODO: add binding
 data LambdaF a = 
     LVar VarName
   | Bind VarName a
